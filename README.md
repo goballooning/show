@@ -1,3 +1,13 @@
+## install mayavi 
+- on windows via Anaconda Python distribution
+- on linux, search mayavi in software center
+- on mac, via macports
+
+    ```bash
+    sudo port install vtk +python27+qt4_mac
+    sudo port install py27-mayavi
+    ```
+
 ## in matlab
 
 ```matlab
