@@ -1,0 +1,690 @@
+#!/opt/local/bin/python
+# -*- coding: utf-8 -*-
+
+########################################################################
+
+# import pdb
+#pdb.set_trace()
+
+usage = """
+    show
+    -h print usage
+    -t tensor.mat     , saveTensorSlices4mayavi
+    -v vector.mat     , saveVectors4mayavi.m
+    -i imageVolum.mat , saveImageVolum3d4mayavi
+
+    -fl fiber.mat      , savePaths4mayavi
+
+    -l likelihood.mat , saveLikelihoodList4mayavi
+    -sl singleLikelihood.mat, saveIndexLikelihood4mayavi
+
+    -p seeds.mat, saveSeeds4mayavi
+    -m marker.mat     , saveMarkers4mayavi
+
+    save off-screen:
+    xclient "show -fl f5000s388.mat -xyz 32 -save "
+
+    """
+
+def vectorShow(option, fileName, e):
+    import pyvtk as pv
+
+    points = np.array(sio.loadmat(fileName)['points'], dtype=np.int)
+    vectors = np.array(sio.loadmat(fileName)['vectors'], dtype=np.float)
+    vtk = pv.VtkData(pv.UnstructuredGrid(points), pv.PointData(pv.Vectors(vectors)))
+    vtk.tofile(fileName[:-3]+'vtk')
+
+    scene = e.scenes[0]
+    vtk_file_reader = e.open(fileName[:-3]+'vtk', scene)
+    from mayavi.modules.vectors import Vectors
+    vectors = Vectors()
+    print '\n\n'
+    print vectors
+    #vectors.glyph.glyph_source.glyph_source = vectors.glyph.glyph_source.glyph_dict['cylinder_source']
+    vectors.glyph.glyph_source.glyph_source = vectors.glyph.glyph_source.glyph_dict['arrow_source']
+    e.add_filter(vectors, vtk_file_reader)
+
+def likelihoodShow(option, fileName, e): # with counter
+    X = sio.loadmat(fileName)['iX']
+    Y = sio.loadmat(fileName)['iY']
+    Z = sio.loadmat(fileName)['iZ']
+    Value = sio.loadmat(fileName)['iValusOnSphere']
+    #PositionId = sio.loadmat(fileName)['positionId']
+    counter = sio.loadmat(fileName)['counter']
+
+    for c in range(counter):
+        x = X[:,:, c]
+        y = Y[:,:, c]
+        z = Z[:,:, c]
+        value = Value[:,:, c]
+
+        mlab.mesh(x, y, z, scalars=value, colormap='jet')
+
+def singleLikelihoodShow(option, fileName, e):
+    tempData = sio.loadmat(fileName)
+    x = tempData['iX']
+    y = tempData['iY']
+    z = tempData['iZ']
+    value = tempData['iValusOnSphere']
+
+#    if tempData.has_key('info') & tempData.has_key('loc'):
+#        print tempData['info'][0]
+#        print tempData['loc']
+#        print tempData['loc'][0]
+#        print tempData['loc'][1]
+#        print tempData['loc'][2]
+#
+#        from enthought.mayavi.modules.text import Text
+#        text1 = Text()
+#        text1.text = tempData['info'][0]
+#        e.add_filter(text1)
+#        text1.position_in_3d = True
+#        text1.x_position = tempData['loc'][0][0]
+#        text1.y_position = tempData['loc'][1][0]
+#        text1.z_position = tempData['loc'][2][0]
+#
+#        #text1.actor.text_scale_mode = 'prop'#'none'
+#        #text1.actor.minimum_size = np.array([10, 10])
+#        #text1.actor.position2 = np.array([ 0.0502,  1.    ])
+#        #text1.actor.position = np.array([ 1.,  0.])
+#        #text1.actor.width = 0.0502
+#        #text1.width = 1.0502
+
+    mlab.mesh(x, y, z, scalars=value, colormap='jet')#, representation='points')
+    #surface.actor.property.representation = 'points'
+
+#    e.add_module(o)
+
+########################################################################
+
+def image3dVolumnShow(option, fileName, e):
+    tempLoad = sio.loadmat(fileName)
+
+    # ArraySource
+    from mayavi.sources.array_source import ArraySource
+    src = ArraySource(transpose_input_array=True)#if False, rue
+    src.scalar_data = np.array(tempLoad['intensity'], dtype=np.float32)
+
+    if tempLoad.has_key('spacing'):
+        src.spacing = np.array(tempLoad['spacing'].ravel(), dtype=np.float32)
+#        src.spacing = np.array(tempLoad['spacing'].ravel(), dtype=float32)
+    # python sets default spacing as 1 1 1
+
+    if tempLoad.has_key('origin'):
+        #src.origin = np.array(tempLoad['origin'].ravel(), dtype=float32)
+        src.origin = np.array(tempLoad['origin'].ravel(), dtype=np.float32)
+    else: # default origin
+        src.origin = (0.5, 0.5, 0.5)
+
+    e.add_source(src)
+
+    changeViewAngle(e, 3)
+
+    #mlab.pipeline.volume(src, vmin=0.5, vmax=0.7)
+
+    if 0:    # Outline
+        from mayavi.modules.outline import Outline
+        o = Outline()
+        e.add_module(o)
+        #o.actor.property.color = 1, 0, 0 # red color.
+
+    # I
+    #from enthought.mayavi.modules.image_plane_widget import ImagePlaneWidget
+    #ipw = ImagePlaneWidget()
+
+    # II
+    #mapName = 'jet'
+    mapName = 'black-white'
+#    mapName = 'gist_ncar'
+
+    if 1: # add x and y plane widget
+        ipw = mlab.pipeline.image_plane_widget(src, colormap=mapName)
+        ipw.name = 'x-axes'
+        ipw.ipw.slice_index = 33
+        ipw.ipw.slice_index = 30
+
+        # no need the following line
+        # e.add_module(ipw)   # default x axes
+
+        ipw_y = mlab.pipeline.image_plane_widget(src, colormap=mapName)
+        ipw_y.ipw.plane_orientation = 'y_axes'
+        ipw_y.name = 'y-axes'
+        ipw_y.ipw.slice_index = 41
+
+    ipw_z = mlab.pipeline.image_plane_widget(src, colormap=mapName)
+    ipw_z.ipw.plane_orientation = 'z_axes'
+    ipw_z.name = 'z-axes'
+    ipw_z.ipw.slice_index = 20
+
+    addAxis(e, 0)
+
+def addAxis(e, visibleOrNot):
+    from mayavi.modules.axes import Axes
+    axes1 = Axes()
+    #axes1 =mlab.axes(xlabel=r'$\alpha$', ylabel=r'$\beta$', zlabel=r'$\sigma$')
+
+    #module_manager2 = e.scenes[0].children[0].children[0]
+    #e.add_filter(axes1, module_manager2)
+
+    e.add_filter(axes1)
+
+    # axes
+    axes1.axes.fly_mode = 'none'
+    #axes1.axes.fly_mode = 'outer_edges'
+    axes1.axes.number_of_labels = 6
+    axes1.axes.number_of_labels = 16
+    axes1.axes.number_of_labels = 13
+    axes1.axes.font_factor = 2
+    axes1.axes.font_factor = 0.7
+    #axes1.axes.scaling = True
+
+    axes1.axes.x_label = 'x'
+    axes1.axes.y_label = 'y'
+    axes1.axes.z_label = 'z'
+
+    # global property
+    #axes1.property.reference_count = 41
+    axes1.property.color = (0.0, 0.0, 0.0)
+    axes1.property.display_location = 'foreground'
+    #axes1.property.display_location = 'background'
+
+    # title text
+    axes1.title_text_property.color = (0.0, 0.0, 0.0)
+    axes1.title_text_property.bold = False
+    axes1.title_text_property.italic = True
+    axes1.title_text_property.font_family = 'times'
+
+    # label text
+    axes1.label_text_property.color = (0.0, 0.0, 0.0)
+    axes1.label_text_property.bold = False
+    axes1.label_text_property.italic = False
+    axes1.label_text_property.font_family = 'times'
+    #axes1.label_text_property.font_family = 'courier'
+
+
+    if visibleOrNot == 0:
+        axes1.visible = False
+    elif visibleOrNot == 1:
+        axes1.visible = True
+
+def pointShow(option, fileName, e):
+    markers=sio.loadmat(fileName)
+    mx = np.array(markers['x'], dtype='float32')
+    my = np.array(markers['y'], dtype='float32')
+    mz = np.array(markers['z'], dtype='float32')
+    # change color: the value and the colormap
+    mcolor = np.array([[1 for colum in range(mx.shape[1])]])
+
+    l = mlab.points3d(mx, my, mz, mcolor, scale_factor=1, colormap='hsv', name=fileName) # mode='sphere', 'cube'
+
+def saveTensorVtk(fileName):
+    import pyvtk as pv
+
+    points = np.array(sio.loadmat(fileName)['points'], dtype=np.int)
+
+    tensors = sio.loadmat(fileName)['tensors']
+    scalars = sio.loadmat(fileName)['scalars']
+
+    pointdata = pv.PointData(pv.Tensors(tensors), pv.Scalars(scalars))#, LookupTable(table))
+
+    vtk = pv.VtkData(pv.UnstructuredGrid(points), pointdata)
+
+    baseName, extention = path.splitext(fileName)
+    vtk.tofile(baseName+'.vtk')
+
+def tensorShow(option, fileName, e):
+    saveTensorVtk(fileName)
+
+    scene = e.scenes[0]
+    baseName, extention = path.splitext(fileName)
+    vtk_file_reader = e.open(baseName+'.vtk', scene)
+
+#    from mayavi.sources.vtk_file_reader import VTKFileReader
+#    vtk_file_reader = VTKFileReader()
+#    vtk_file_reader.initialize(fileName)
+#    e.add_source(vtk_file_reader)
+#
+#    ''' or in this way to open vtk file
+#    e.open(baseName+'.vtk', scene)
+#    '''
+#
+#    '''
+#    #    from mayavi.modules.outline import Outline
+#    #    outline = Outline()
+#
+#    #    e.add_module(outline)
+#    #    mlab.outline(color=(0,0,0))
+#    #    outline.visible = False
+#    '''
+#
+    from mayavi.modules.tensor_glyph import TensorGlyph
+    tensor_glyph = TensorGlyph()
+#module_manager = vtk_file_reader.children[0]
+#
+    e.add_module(tensor_glyph)
+
+    tensor_glyph.glyph.glyph_source.glyph_source.phi_resolution = 8
+    tensor_glyph.glyph.glyph_source.glyph_source.theta_resolution = 4
+    tensor_glyph.glyph.glyph.scale_factor = 0.2
+
+#    ''' not need to change lut, no matter which ones is used, the actual color does not change
+#    module_manager = vtk_file_reader.children[0]
+#    module_manager.scalar_lut_manager.lut_mode = 'hsv'
+#    module_manager.scalar_lut_manager.lut_mode = 'jet'
+#    '''
+#
+#    ''' no need to choose source, nor to set color mode, use default scalars mode
+#    tensor_glyph.glyph.glyph_source.glyph_source = tensor_glyph.glyph.glyph_source.glyph_dict['cylinder_source']
+#    tensor_glyph.glyph.glyph.color_mode = 'eigenvalues'
+#    tensor_glyph.glyph.color_mode_tensor = 'eigenvalues'
+#    '''
+#
+#    ''' other scale factors
+#    tensor_glyph.glyph.glyph.scale_factor = 500 # for synthetic data
+#    tensor_glyph.glyph.glyph.scale_factor = 0.3
+#    #tensor_glyph.glyph.glyph_source.glyph_source = tensor_glyph.glyph.glyph_source.glyph_dict['arrow_source']
+#
+#    # jin
+#    tensor_glyph.glyph.glyph_source.glyph_source = tensor_glyph.glyph.glyph_source.glyph_dict['glyph_source2d']
+#    tensor_glyph.glyph.glyph_source.glyph_source.glyph_type = 'circle'
+#    tensor_glyph.glyph.glyph.scale_factor = 0.1
+#    tensor_glyph.glyph.glyph_source.glyph_source.filled = True
+#    '''
+
+    scene.scene.z_plus_view()
+    #scene.scene.isometric_view()
+
+
+def fiberShow(option, fileName, e):
+    # http://docs.enthought.com/mayavi/mayavi/auto/example_plotting_many_lines.html
+
+    loaded = sio.loadmat(fileName)
+    x = np.array(loaded['x'], dtype='float32')
+    y = np.array(loaded['y'], dtype='float32')
+    z = np.array(loaded['z'], dtype='float32')
+    connections = np.array(loaded['connections'], dtype='int32')
+
+    # set color according to dx dy or dz corrdinates
+    chooseColor = 1
+    if chooseColor == 1:
+        s = np.array(loaded['s'], dtype='float32')
+    elif chooseColor == 2:
+        s = np.array(loaded['s2'], dtype='float32')
+    elif chooseColor == 3:
+        s = np.array(loaded['s3'], dtype='float32')
+
+    if 0: # forget what I was doing here
+        g = np.array(loaded['g'], dtype='float32')
+        b = np.array(loaded['b'], dtype='float32')
+
+        # Create the points
+        src = mlab.pipeline.vector_scatter(x, y, z, s, g, b)
+    else:
+        # Create the points
+        src = mlab.pipeline.scalar_scatter(x, y, z, s)
+
+#    ModuleManager = e.scenes[0].children[0].children[0]
+
+    # Connect them
+    src.mlab_source.dataset.lines = connections
+
+    # tube show, http://github.enthought.com/mayavi/mayavi/auto/example_protein.html
+    tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
+    tube.filter.radius_factor = 0.5
+    tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
+    #
+    if option == '-fs': # tube single random color
+        #color = np.random.random(3)
+        #mlab.pipeline.surface(tube, color=tuple(color))
+        mlab.pipeline.surface(tube)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+    elif option == '-fs1':
+        #mlab.pipeline.surface(tube, color=(0.0, 0.9, 1))
+        lines = mlab.pipeline.stripper(src)
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(0.0, 0.0, 1), representation='wireframe', name='fiberLine '+fileName)
+    elif option == '-fs2':# tube show
+        #mlab.pipeline.surface(tube, color=(0.9, 0.8, 0))
+        lines = mlab.pipeline.stripper(src)
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(1., 0., 0), representation='wireframe', name='fiberLine '+fileName)
+    elif option == '-ft':       # tube show
+        mlab.pipeline.surface(tube, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+    elif option == '-fl':    # line show
+        # The stripper filter cleans up connected lines
+        lines = mlab.pipeline.stripper(src)
+        # Finally, display the set of lines
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+
+    addAxis(e, 0)
+
+
+#    if 0: # modify label
+#        # should be defined according to data
+#        axes.axes.x_label = 'L --> R'
+#        axes.axes.y_label = 'A --> P'
+#        axes.axes.z_label = 'H --> F'
+#
+#        #Todo:
+#        #scene = engine.scenes[0]
+#        #scene.scene.show_axes = True
+
+######################################################################
+# Viewing from the feet (indicated by the "X" in the center of LV)   #
+#                                                                    #
+# For any axis:  - ---> +                                            #
+#   X is always about L->R or R->L                                   #
+#   Y: A->P or P->A                                                  #
+#   Z: F->H or H->F                                                  #
+#                                                                    #
+# Coordinate system in MRease (DICOM-Standard, +LPH)                 #
+# Coordinate system in Mumaris 3 and Mumaris 3.5 (+FAL)              #
+#                                                                    #
+# In the following, "+" "-" are only for a "+LPH" coordinate system  #
+#                                                                    #
+#                               -Anterior                            #
+# AP: sagittal view  ?                                               #
+# FH: short axis view           ###########                          #
+# LR: long axis view  ?     ##################                       #
+#                         ####    ##############                     #
+#                      ####      #####       #####                   #
+#                    ####       ####           ####                  #
+#                  ####        ####             ####                 #
+#        -Right  ####          ####   -  X  +   ####  +Left          #
+#               ####           #### Feet-> Head ####                 #
+#             ####              ####           ####                  #
+#            ####                #####       #####                   #
+#            ####################################                    #
+#               ##############################                       #
+#                                                                    #
+#                               +Posterior                           #
+#                                                                    #
+######################################################################
+
+
+def changeColormap(e, positionOption, mapName, lr):
+    # take caution when using moduleManager, (how to determine the id properly?)
+
+    # for showing helix angle
+
+    moduleManager = e.scenes[0].children[0].children[0].children[0]
+
+    # color map name
+    if lr == 1:
+        #  for boolean left right colorbar
+        nLabels = 0
+        nColors = 2
+    else:
+        nLabels=None
+        nColors=None
+
+    # color map
+    moduleManager.scalar_lut_manager.lut_mode = mapName
+
+#    print mlab.colorbar.func_doc
+#    mlab.colorbar(object=None, title=None, orientation=None, nb_labels=None, nb_colors=None, label_fmt=None)
+        # horizontal vertical
+        # label_fmt='%.1f'
+        # nb_colors: The maximum number of colors displayed on the colorbar.
+
+    # colorbar postion: l r b
+    if positionOption == 'r':
+        mlab.colorbar(object=None, title=None, orientation='vertical', nb_labels=nLabels, nb_colors=nColors)
+        # change position: position, left-bottom point position, position2, width, height
+        # colorbar on right
+        moduleManager.scalar_lut_manager.scalar_bar_representation.position  = ([ 0.85,  0.1])
+        moduleManager.scalar_lut_manager.scalar_bar_representation.position2 = ([ 0.15,  0.95])
+    elif positionOption == 'l':
+        # colorbar on left, use default
+        mlab.colorbar(object=None, title=None, orientation='vertical', nb_labels=nLabels, nb_colors=nColors)
+    elif positionOption == 'b':
+        # colorbar at bottom , use default
+        mlab.colorbar(object=None, title=None, orientation='horizontal', nb_labels=nLabels, nb_colors=nColors)
+
+    # text color, label title
+    moduleManager.scalar_lut_manager.label_text_property.color = (0.0, 0.0, 0.0)
+#     moduleManager.scalar_lut_manager.title_text_property.color = (0.0, 0.0, 0.0)
+
+
+#moduleManager
+#
+#moduleManager.scalar_lut_manager.scalar_bar.title = 'Nonegg'
+#
+#moduleManager.scalar_lut_manager.scalar_bar.orientation = 'vertical'
+#
+#moduleManager.scalar_lut_manager.scalar_bar.maximum_number_of_colors = 25
+#moduleManager.scalar_lut_manager.scalar_bar.number_of_labels = 6
+#
+#moduleManager.scalar_lut_manager.scalar_bar.height = 0.8
+#moduleManager.scalar_lut_manager.scalar_bar.width = 0.17
+#
+#moduleManager.scalar_lut_manager.scalar_bar.maximum_height_in_pixels = 214
+#moduleManager.scalar_lut_manager.scalar_bar.maximum_width_in_pixels = 1
+#
+
+
+def changeViewAngle(e, option):
+    scene = e.current_scene
+
+    if option == 0:
+        scene.scene.camera.position = [-57.89998035872523, -59.271264410366925, 17.468525901274564]
+        scene.scene.camera.focal_point = [25.0, 26.5, 27.0]
+        scene.scene.camera.view_angle = 30.0
+        scene.scene.camera.view_up = [0.053322484697141417, 0.059235692436074794, -0.99681886286694121]
+        scene.scene.camera.clipping_range = [41.926827005343732, 217.81237592038062]
+        scene.scene.camera.compute_view_plane_normal()
+        scene.scene.render()
+    elif option == 1:
+        scene.scene.camera.position = [-72.529681914638289, -79.952315056535809, 16.190079400908132]
+        scene.scene.camera.focal_point = [27.014414124993714, 23.980214305253028, 32.154534668656552]
+        scene.scene.camera.view_angle = 30.0
+        scene.scene.camera.view_up = [0.073039307880728294, 0.082710732931061098, -0.99389345211763558]
+        scene.scene.camera.clipping_range = [65.226395295448611, 244.98006839943565]
+        scene.scene.camera.compute_view_plane_normal()
+        scene.scene.render()
+    elif option == 2:
+        # save z slice cut
+        scene.scene.camera.position = [26.244433879852295, 27.080117106437683, -86.61222295420302]
+        scene.scene.camera.focal_point = [26.244433879852295, 27.080117106437683, 15.500059604644775]
+        scene.scene.camera.view_angle = 30.0
+        scene.scene.camera.view_up = [0.0, 1.0, 0.0]
+        scene.scene.camera.clipping_range = [98.902733062231178, 106.398745094178]
+        scene.scene.camera.compute_view_plane_normal()
+        scene.scene.render()
+    elif option == 3:
+        # render volumn
+        scene.scene.camera.position = [-102.1214098838977, -113.66702223274383, -49.070670689195701]
+        scene.scene.camera.focal_point = [36.19592606025806, 33.014630033704847, 26.952480467889593]
+        scene.scene.camera.view_angle = 30.0
+        scene.scene.camera.view_up = [0.23867065962825654, 0.25988888619403783, -0.93567840792947421]
+        scene.scene.camera.clipping_range = [103.46741311679722, 356.88126356377745]
+        scene.scene.camera.compute_view_plane_normal()
+        scene.scene.render()
+    elif option == 4: # save selected fiber, temp view angle, y view, upper
+        scene.scene.camera.position = [-128.50879924102298, 45.071002254850171, -10.231583068026309]
+        scene.scene.camera.focal_point = [21.787781567226162, 47.731030399447711, 26.434194438704488]
+        scene.scene.camera.view_angle = 30.0
+        scene.scene.camera.view_up = [0.23692143316496755, 0.0048615929295675979, -0.97151664907053692]
+        scene.scene.camera.clipping_range = [111.05359849019, 243.68262002798815]
+        scene.scene.camera.compute_view_plane_normal()
+        scene.scene.render()
+    elif option == 5:
+        # for synthetic vector field
+        # z view
+        scene.scene.z_plus_view()
+        # zoom in two times
+        #scene.scene.camera.position = [25.318648681044579, 25.756495013833046, 105.97095071759357]
+        #scene.scene.camera.focal_point = [25.318648681044579, 25.756495013833046, 9.9893035888671875]
+        #scene.scene.camera.view_angle = 30.0
+        #scene.scene.camera.view_up = [0.0, 1.0, 0.0]
+        #scene.scene.camera.clipping_range = [89.601837418990016, 104.2440266408407]
+        #scene.scene.camera.compute_view_plane_normal()
+        #scene.scene.render()
+
+    if 0:  # viewing angle for isbi 2012
+        # check in Epylab: mlab.view(), then use the output as input
+        mlab.view(-165.40678011949012, 64.78095351770682, 75.480719956985183, np.array([ 24.3636624 ,  20.88871795,  27.44736188]))
+        mlab.roll(120)
+
+def changeView(option, arg, e):
+    # attention: arg is string
+
+    if arg == '1':
+        e.current_scene.scene.x_plus_view()
+    elif arg == '2': # change to y plus view, view from LV
+        #e.current_scene.scene.y_minus_view()
+        e.current_scene.scene.y_plus_view()
+    elif arg == '3':
+        e.current_scene.scene.z_minus_view()
+    #
+    elif arg == '11':
+        e.current_scene.scene.x_minus_view()
+    elif arg == '12':
+        e.current_scene.scene.x_plus_view()
+    elif arg == '21':
+        e.current_scene.scene.y_minus_view()
+    elif arg == '22':
+        e.current_scene.scene.y_plus_view()
+    elif arg == '31':
+        e.current_scene.scene.z_minus_view()
+    elif arg == '32':
+        e.current_scene.scene.z_plus_view()
+    else:
+        print 'wrong option in changeView: -xyz 1 2 3 or 11 12 21 22 31 32'
+
+
+def functionCheck(e):
+    # function dictionary
+    optionDict= {\
+            '-h':usage, \
+
+            '-t':tensorShow, \
+            '-v':vectorShow, \
+
+            '-i':image3dVolumnShow, \
+
+            '-l':likelihoodShow, \
+            '-sl':singleLikelihoodShow, \
+
+            '-p':pointShow, \
+            '-xyz':changeView, \
+            }
+    optionDict.update(dict.fromkeys(['-ft', '-fl', '-fs', '-fs1', '-fs2'], fiberShow))
+
+
+    saveOrNot = False
+
+    # run a function according to optionDict
+    for arg in sys.argv[1:]:
+        if arg in optionDict:
+            option = arg
+            funcName = optionDict[arg]
+        elif arg == '-map':
+            # changeColormap(e, positionOption, mapName, lr):
+            changeColormap(e, 'b', 'jet', 0)
+        elif arg == '-save':
+            saveOrNot = True
+        elif arg == '-s':
+            saveOrNot = True
+        else:
+            # if it's not an option, then it's a file name.
+            # use the function according to the previous option open this file
+            # name mayavi scene after file name
+            e.current_scene.name = option + ' ' + arg
+            funcName(option, arg, e)
+
+    return saveOrNot
+
+def configFigureScene(e):
+    # there is no fh outside, but e.current_scene does exist.
+
+    # figure handle, fh , scene
+    # fh.scene , scene.scene
+#    mlab.clf()
+#    scene = mlab.gcf()
+    if 1:
+        s = 900
+        s = 600
+        fh = mlab.figure(1, size=(s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+    else:
+        fh = mlab.figure(1, size=(1.269*s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+
+    # set magnification
+    fh.scene.magnification = 1
+    # fh.scene.jpeg_quality = 100
+
+    # set background and foreground
+    #fh.scene.background = (1.0, 1.0, 1.0)
+    #fh.scene.foreground = (0.0, 0.0, 0.0)
+
+
+if __name__=='__main__':
+    import sys
+
+# commented, for default fiberShow
+#    if len(sys.argv) == 1:
+#        print usage
+#        sys.exit()
+
+    if len(sys.argv) == 2 and sys.argv[1] == '-h':
+        print usage
+    else:
+
+        # global import
+        import scipy.io as sio
+        import numpy as np
+        import os.path as path
+        import time
+        
+        from mayavi.api import Engine
+        from mayavi import mlab
+        e = Engine()
+        e.start()
+        
+        # default static figure scene config in function
+        configFigureScene(e)
+        e.current_scene.scene.disable_render = True
+
+
+        # statically change view angle in function,
+        # current option range: 0-5
+        # changeViewAngle(e, 5)
+
+        e.current_scene.scene.disable_render = False
+
+
+        if len(sys.argv) == 1: # default function if there is no arguments
+            print usage
+            #tensorShow('-t', 't.mat', e)
+            fiberShow('-fl', 'f.mat', e)
+            saveOrNot = False
+        else:
+            saveOrNot = functionCheck(e)
+
+
+
+        time.sleep(1)
+        if saveOrNot: # file arguments should be the argv[2]
+            #e.current_scene.scene.save(sys.argv[2][:-3]+'png', size=(800, 800)) # not good, black line on figure,
+            e.current_scene.scene.save(sys.argv[2][:-3]+'png') # not good, black line on figure,
+        else:
+            mlab.show()
+#done
+
+#{ to remove:
+# mlab.title(titlename, size=0.3, height=0.05) # give strange results in the saved fig
+
+#    from enthought.mayavi.modules.api import GridPlane
+#}
+
+
+# http://docs.enthought.com/mayavi/mayavi/tips.html#offscreen-rendering
+#
+# Off screen rendering does not work:
+#    if 1:
+#        mlab.options.offscreen = True
+#
+# Use the following instead
+# Xvfb :1 -screen 0 1280x1024x24 -auth localhost
+# export DISPLAY=:1
+# xvfb-run --server-args="-screen 0 1024x768x24" show -fl ...
+
+
+# vim, ft=python
