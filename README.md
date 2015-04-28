@@ -1,5 +1,5 @@
 ## install mayavi 
-- on windows via Anaconda Python distribution
+- on windows via [Anaconda Python distribution](http://continuum.io/downloads)
 - on linux, search mayavi in software center
 - on mac, via macports
 
@@ -19,10 +19,18 @@ saveImageVolum3d4mayavi('~/i', noise_free_data.intensity, 1)
 saveVectors4mayavi('~/v', test_data, 1) % single color
 ```
 
-## on command line
+## to use `show`
+- on command line
 
-```bash
-$ show -ft f.mat
-$ show -i i.mat
-$ show -fl f.mat -i i.mat -t t.mat
-```
+    ```bash
+    $ show -ft f.mat
+    $ show -i i.mat
+    $ show -fl f.mat -i i.mat -t t.mat
+    ```
+
+- in ipython interpreter
+
+    ```python
+    In [1]: %run show_with_full_path -i i.mat
+
+    ```
