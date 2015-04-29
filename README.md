@@ -1,6 +1,12 @@
 ## install mayavi 
 - on windows via [Anaconda Python distribution](http://continuum.io/downloads)
-- on linux, search mayavi in software center
+    - download and install Anaconda
+    - on windows cmd prompt or Anaconda Command Prompt: 
+
+        ```
+        > conda install mayavi
+        ```
+- on linux, search mayavi in software center 
 - on mac, via macports
 
     ```bash
