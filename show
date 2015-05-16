@@ -12,21 +12,78 @@ usage = """
     -t tensor.mat     , saveTensorSlices4mayavi
     -v vector.mat     , saveVectors4mayavi.m
     -i imageVolum.mat , saveImageVolum3d4mayavi
+    -m mesh.mat       , saveMesh4Mayavi.m
 
     -fl fiber.mat      , savePaths4mayavi
+    -ft fiber.mat      , savePaths4mayavi
 
     -l likelihood.mat , saveLikelihoodList4mayavi
     -sl singleLikelihood.mat, saveIndexLikelihood4mayavi
 
     -p seeds.mat, saveSeeds4mayavi
-    -m marker.mat     , saveMarkers4mayavi
+    # -m marker.mat     , saveMarkers4mayavi
 
     save off-screen:
     xclient "show -fl f5000s388.mat -xyz 32 -save "
 
     """
 
-def vectorShow(option, fileName, e):
+def show_mesh(file_name, engine):
+    loaded = sio.loadmat('/Users/hli/mesh.mat')
+
+    x = loaded['x'][:,0]
+    y = loaded['y'][:,0]
+    z = loaded['z'][:,0]
+    triangles_array = loaded['triangles'] - 1
+    triangles = triangles_array.tolist()
+
+    mesh_with_default_color = mlab.triangular_mesh(x, y, z, triangles, representation='wireframe', opacity=0)
+
+    face_colors = loaded['colors'][:,0]
+
+
+    # These are the scalar values for each triangle
+    cell_data = mesh_with_default_color.mlab_source.dataset.cell_data
+    cell_data.scalars = face_colors
+    cell_data.scalars.name = 'Cell data'
+    cell_data.update()
+
+    # associate mesh_with_default_color with Cell data
+    mesh_filter = mlab.pipeline.set_active_attribute(mesh_with_default_color, cell_scalars='Cell data')
+
+    # new mesh with colored faces
+    new_mesh_with_face_colors = mlab.pipeline.surface(mesh_filter)
+    
+    # show legend
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.show_legend = True
+    
+    # legend height, width
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.scalar_bar.height = 0.8
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.scalar_bar.width = 0.17
+
+    # no legend name
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.use_default_name = False
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.data_name = u''
+
+    # position
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.scalar_bar_representation.position = np.array([ 0.74153589,  0.17269504])
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.scalar_bar_representation.maximum_size = np.array([100000, 100000])
+
+    # label color, font
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.label_text_property.color = (0.0, 0.0, 0.0)
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.label_text_property.font_family = 'courier'
+
+    # change view angle
+    scene = engine.current_scene
+    scene.scene.camera.position = [-0.029011553745107214, 0.01930174894554694, 0.31545096121281646]
+    scene.scene.camera.focal_point = [-0.016181424386282221, 0.018717886396620927, 8.9974354820928216e-05]
+    scene.scene.camera.view_angle = 30.0
+    scene.scene.camera.view_up = [-0.98702551358839374, 0.1553864101317306, -0.040443776677522088]
+    scene.scene.camera.clipping_range = [0.30717653624460661, 0.32701532327825145]
+    scene.scene.camera.compute_view_plane_normal()
+
+    
+def vectorShow(fileName, e):
     import pyvtk as pv
 
     points = np.array(sio.loadmat(fileName)['points'], dtype=np.int)
@@ -44,7 +101,7 @@ def vectorShow(option, fileName, e):
     vectors.glyph.glyph_source.glyph_source = vectors.glyph.glyph_source.glyph_dict['arrow_source']
     e.add_filter(vectors, vtk_file_reader)
 
-def likelihoodShow(option, fileName, e): # with counter
+def likelihoodShow(fileName, e): # with counter
     X = sio.loadmat(fileName)['iX']
     Y = sio.loadmat(fileName)['iY']
     Z = sio.loadmat(fileName)['iZ']
@@ -60,7 +117,7 @@ def likelihoodShow(option, fileName, e): # with counter
 
         mlab.mesh(x, y, z, scalars=value, colormap='jet')
 
-def singleLikelihoodShow(option, fileName, e):
+def singleLikelihoodShow(fileName, e):
     tempData = sio.loadmat(fileName)
     x = tempData['iX']
     y = tempData['iY']
@@ -97,7 +154,7 @@ def singleLikelihoodShow(option, fileName, e):
 
 ########################################################################
 
-def image3dVolumnShow(option, fileName, e):
+def image3dVolumnShow(fileName, e):
     tempLoad = sio.loadmat(fileName)
 
     # ArraySource
@@ -207,7 +264,7 @@ def addAxis(e, visibleOrNot):
     elif visibleOrNot == 1:
         axes1.visible = True
 
-def pointShow(option, fileName, e):
+def pointShow(fileName, e):
     markers=sio.loadmat(fileName)
     mx = np.array(markers['x'], dtype='float32')
     my = np.array(markers['y'], dtype='float32')
@@ -232,7 +289,7 @@ def saveTensorVtk(fileName):
     baseName, extention = path.splitext(fileName)
     vtk.tofile(baseName+'.vtk')
 
-def tensorShow(option, fileName, e):
+def tensorShow(fileName, e):
     saveTensorVtk(fileName)
 
     scene = e.scenes[0]
@@ -295,7 +352,60 @@ def tensorShow(option, fileName, e):
     #scene.scene.isometric_view()
 
 
-def fiberShow(option, fileName, e):
+def fiberTube(fileName, e):
+    # tube show
+    src = fiberShowCommon(fileName)
+    # tube show, http://github.enthought.com/mayavi/mayavi/auto/example_protein.html
+    tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
+    tube.filter.radius_factor = 0.5
+    tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
+    mlab.pipeline.surface(tube, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+
+def fiberLine(fileName, e):
+    # line show
+    src = fiberShowCommon(fileName)
+    # The stripper filter cleans up connected lines
+    lines = mlab.pipeline.stripper(src)
+    mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+
+def fiberSingleRandomColor(fileName, e):
+    # tube single random color
+    src = fiberShowCommon(fileName)
+    color = np.random.random(3)
+    if 1: 
+        tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
+        tube.filter.radius_factor = 0.5
+        tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
+        mlab.pipeline.surface(tube, color=tuple(color))
+        mlab.pipeline.surface(tube)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+    else:
+        lines = mlab.pipeline.stripper(src)
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=tuple(color), representation='wireframe', name='fiberLine '+fileName)
+
+def fiberSingleColor1(fileName, e):
+    src = fiberShowCommon(fileName)
+    if 1: 
+        tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
+        tube.filter.radius_factor = 0.5
+        tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
+        mlab.pipeline.surface(tube, color=(0.0, 0.9, 1)) 
+    else:
+        lines = mlab.pipeline.stripper(src)
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(0.0, 0.0, 1), representation='wireframe', name='fiberLine '+fileName)
+
+def fiberSingleColor2(fileName, e):
+    src = fiberShowCommon(fileName)
+    if 1: 
+        # tube show 
+        tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
+        tube.filter.radius_factor = 0.5
+        tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
+        mlab.pipeline.surface(tube, color=(0.9, 0.8, 0))
+    else:
+        lines = mlab.pipeline.stripper(src)
+        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(1., 0., 0), representation='wireframe', name='fiberLine '+fileName)
+
+def fiberShowCommon(fileName):
     # http://docs.enthought.com/mayavi/mayavi/auto/example_plotting_many_lines.html
 
     loaded = sio.loadmat(fileName)
@@ -323,37 +433,10 @@ def fiberShow(option, fileName, e):
         # Create the points
         src = mlab.pipeline.scalar_scatter(x, y, z, s)
 
-#    ModuleManager = e.scenes[0].children[0].children[0]
-
     # Connect them
     src.mlab_source.dataset.lines = connections
 
-    # tube show, http://github.enthought.com/mayavi/mayavi/auto/example_protein.html
-    tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
-    tube.filter.radius_factor = 0.5
-    tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
-    #
-    if option == '-fs': # tube single random color
-        #color = np.random.random(3)
-        #mlab.pipeline.surface(tube, color=tuple(color))
-        mlab.pipeline.surface(tube)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
-    elif option == '-fs1':
-        #mlab.pipeline.surface(tube, color=(0.0, 0.9, 1))
-        lines = mlab.pipeline.stripper(src)
-        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(0.0, 0.0, 1), representation='wireframe', name='fiberLine '+fileName)
-    elif option == '-fs2':# tube show
-        #mlab.pipeline.surface(tube, color=(0.9, 0.8, 0))
-        lines = mlab.pipeline.stripper(src)
-        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, color=(1., 0., 0), representation='wireframe', name='fiberLine '+fileName)
-    elif option == '-ft':       # tube show
-        mlab.pipeline.surface(tube, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
-    elif option == '-fl':    # line show
-        # The stripper filter cleans up connected lines
-        lines = mlab.pipeline.stripper(src)
-        # Finally, display the set of lines
-        mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
-
-    addAxis(e, 0)
+    return src
 
 
 #    if 0: # modify label
@@ -523,7 +606,7 @@ def changeViewAngle(e, option):
         mlab.view(-165.40678011949012, 64.78095351770682, 75.480719956985183, np.array([ 24.3636624 ,  20.88871795,  27.44736188]))
         mlab.roll(120)
 
-def changeView(option, arg, e):
+def changeView(arg, e):
     # attention: arg is string
 
     if arg == '1':
@@ -560,13 +643,22 @@ def functionCheck(e):
 
             '-i':image3dVolumnShow, \
 
+            '-m':show_mesh, \
+
             '-l':likelihoodShow, \
             '-sl':singleLikelihoodShow, \
 
             '-p':pointShow, \
             '-xyz':changeView, \
+
+            '-ft':fiberTube, \
+            '-fl':fiberLine, \
+            '-fs':fiberSingleRandomColor, \
+            '-fs1':fiberSingleColor1, \
+            '-fs2':fiberSingleColor2, \
             }
-    optionDict.update(dict.fromkeys(['-ft', '-fl', '-fs', '-fs1', '-fs2'], fiberShow))
+
+    # optionDict.update(dict.fromkeys(['-ft', '-fl', '-fs', '-fs1', '-fs2'], fiberShow))
 
 
     saveOrNot = False
@@ -588,7 +680,7 @@ def functionCheck(e):
             # use the function according to the previous option open this file
             # name mayavi scene after file name
             e.current_scene.name = option + ' ' + arg
-            funcName(option, arg, e)
+            funcName(arg, e)
 
     return saveOrNot
 
@@ -618,12 +710,9 @@ def configFigureScene(e):
 if __name__=='__main__':
     import sys
 
-# commented, for default fiberShow
-#    if len(sys.argv) == 1:
-#        print usage
-#        sys.exit()
-
-    if len(sys.argv) == 2 and sys.argv[1] == '-h':
+    if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == '-h'):
+        print usage
+        sys.exit()
         print usage
     else:
 
@@ -649,16 +738,8 @@ if __name__=='__main__':
 
         e.current_scene.scene.disable_render = False
 
-
-        if len(sys.argv) == 1: # default function if there is no arguments
-            print usage
-            #tensorShow('-t', 't.mat', e)
-            fiberShow('-fl', 'f.mat', e)
-            saveOrNot = False
-        else:
-            saveOrNot = functionCheck(e)
-
-
+        saveOrNot = functionCheck(e)
+        addAxis(e, 0)
 
         time.sleep(1)
         if saveOrNot: # file arguments should be the argv[2]
