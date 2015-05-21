@@ -29,7 +29,7 @@ usage = """
     """
 
 def show_mesh(file_name, engine):
-    loaded = sio.loadmat('/Users/hli/mesh.mat')
+    loaded = sio.loadmat(file_name)
 
     x = loaded['x'][:,0]
     y = loaded['y'][:,0]
@@ -71,7 +71,7 @@ def show_mesh(file_name, engine):
 
     # label color, font
     new_mesh_with_face_colors.module_manager.scalar_lut_manager.label_text_property.color = (0.0, 0.0, 0.0)
-    new_mesh_with_face_colors.module_manager.scalar_lut_manager.label_text_property.font_family = 'courier'
+    new_mesh_with_face_colors.module_manager.scalar_lut_manager.label_text_property.font_family = 'arial'
 
     # change view angle
     scene = engine.current_scene
@@ -691,12 +691,14 @@ def configFigureScene(e):
     # fh.scene , scene.scene
 #    mlab.clf()
 #    scene = mlab.gcf()
-    if 1:
-        s = 900
-        s = 600
-        fh = mlab.figure(1, size=(s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+    s = 900
+    s = 600
+    if 0:
+        #fh = mlab.figure(1, size=(s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+        fh = mlab.figure(1, size=(s, s))#, bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
     else:
-        fh = mlab.figure(1, size=(1.269*s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+        #fh = mlab.figure(1, size=(1.269*s, s), bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
+        fh = mlab.figure(1, size=(1.269*s, s))#, bgcolor=(0.75, 0.75, 0.75), fgcolor=(1, 1, 1))
 
     # set magnification
     fh.scene.magnification = 1
