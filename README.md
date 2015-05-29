@@ -1,4 +1,6 @@
-# This project provide a handy tool `show` for visualizing 3D image volume, tensor field, vector field, large number of curves, and meshes.
+PMVP: Process medical images in `Matlab`, save data into `.mat` file, and Visualize them in `Python`
+
+This project provide a handy tool `show` for visualizing 3D image volume, tensor field, vector field, large number of curves, and meshes.
 It would be useful for people who analysis medical images in `Matlab` but would like to visualize certain large data set more efficiently elsewhere.
 
 The basic work flow is to 
