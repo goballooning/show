@@ -18,8 +18,7 @@ The basic work flow is to
 - on mac, via macports
 
     ```bash
-    sudo port install vtk +python27+qt4_mac
-    sudo port install py27-mayavi
+    sudo port install py35-mayavi
     ```
 
 ## in matlab
@@ -38,6 +37,7 @@ saveVectors4mayavi('~/v', test_data, 1) % single color
 
     ```bash
     $ show -ft f.mat
+    $ show -t t.mat
     $ show -i i.mat
     $ show -fl f.mat -i i.mat -t t.mat
     ```

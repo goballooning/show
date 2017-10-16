@@ -82,6 +82,7 @@ def show_mesh(file_name, engine):
     scene.scene.camera.clipping_range = [0.30717653624460661, 0.32701532327825145]
     scene.scene.camera.compute_view_plane_normal()
 
+    scene.scene.z_plus_view()
     
 def vectorShow(fileName, e):
     import pyvtk as pv
@@ -95,8 +96,6 @@ def vectorShow(fileName, e):
     vtk_file_reader = e.open(fileName[:-3]+'vtk', scene)
     from mayavi.modules.vectors import Vectors
     vectors = Vectors()
-    print '\n\n'
-    print vectors
     #vectors.glyph.glyph_source.glyph_source = vectors.glyph.glyph_source.glyph_dict['cylinder_source']
     vectors.glyph.glyph_source.glyph_source = vectors.glyph.glyph_source.glyph_dict['arrow_source']
     e.add_filter(vectors, vtk_file_reader)
@@ -322,9 +321,7 @@ def tensorShow(fileName, e):
 
     tensor_glyph.glyph.glyph_source.glyph_source.phi_resolution = 8
     tensor_glyph.glyph.glyph_source.glyph_source.theta_resolution = 4
-    tensor_glyph.glyph.glyph.scale_factor = 0.2
-
-    tensor_glyph.glyph.glyph.scale_factor = 200 # for synthetic tensor data example
+    tensor_glyph.glyph.glyph.scale_factor = 0.05
     
 #    ''' not need to change lut, no matter which ones is used, the actual color does not change
 #    module_manager = vtk_file_reader.children[0]
@@ -361,14 +358,16 @@ def fiberTube(fileName, e):
     tube = mlab.pipeline.tube(src, tube_radius=0.1, name='fiberTube '+fileName) # tube_sides=6 default
     tube.filter.radius_factor = 0.5
     tube.filter.vary_radius = 'vary_radius_off' #rvary_radius_by_scalar'
-    mlab.pipeline.surface(tube, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+    mlab.pipeline.surface(tube.outputs[0].output, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
+    #mlab.pipeline.surface(tube, colormap='hsv', opacity=1)#, colormap='hh', if: color=(0.8, 0.8, 0)), then the tube will be in one color
 
 def fiberLine(fileName, e):
     # line show
     src = fiberShowCommon(fileName)
     # The stripper filter cleans up connected lines
     lines = mlab.pipeline.stripper(src)
-    mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+    mlab.pipeline.surface(lines.outputs[0].output, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+    #mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
 
 def fiberSingleRandomColor(fileName, e):
     # tube single random color
@@ -437,6 +436,7 @@ def fiberShowCommon(fileName):
 
     # Connect them
     src.mlab_source.dataset.lines = connections
+    src.update()
 
     return src
 
@@ -632,7 +632,7 @@ def changeView(arg, e):
     elif arg == '32':
         e.current_scene.scene.z_plus_view()
     else:
-        print 'wrong option in changeView: -xyz 1 2 3 or 11 12 21 22 31 32'
+        print('wrong option in changeView: -xyz 1 2 3 or 11 12 21 22 31 32')
 
 
 def functionCheck(e):
@@ -715,9 +715,9 @@ if __name__=='__main__':
     import sys
 
     if len(sys.argv) == 1 or (len(sys.argv) == 2 and sys.argv[1] == '-h'):
-        print usage
+        print(usage)
         sys.exit()
-        print usage
+        print(usage)
     else:
 
         # global import
