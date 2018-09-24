@@ -1,13 +1,13 @@
 This project provides a `Python` script `show` for visualizing 3D image volume, tensor field, vector field, large number of curves, and meshes.
 
-It can be useful for people who analysis medical images in `Matlab` but would like to visualize large data set efficiently elsewhere.
+It can be useful for people who analyze medical images in `Matlab` but would like to visualize large data set efficiently elsewhere.
 
 The basic work flow is to 
     - save data in `Matlab` with the `save_Data_4_mayavi` functions in `mat` format
     - use `show` in a terminal or in a `ipython` interpreter to visualize the data
 
 
-## install mayavi 
+## Install Mayavi 
 - on windows via [Anaconda Python distribution](http://continuum.io/downloads)
     - download and install Anaconda
     - on windows cmd prompt or Anaconda Command Prompt: 
@@ -49,3 +49,5 @@ saveVectors4mayavi('~/v', test_data, 1) % single color
     In [1]: %run show_with_full_path -i i.mat
 
     ```
+    
+Note: our interaction with Mayavi window can be recorded as Python code, which could useful for later use, e.g., creating other user functions.
