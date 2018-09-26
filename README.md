@@ -50,4 +50,4 @@ saveVectors4mayavi('~/v', test_data, 1) % single color
 
     ```
     
-Note: our interaction with Mayavi window can be recorded as Python code, which could useful for later use, e.g., creating other user functions.
+Note: user interaction with Mayavi window can be recorded as Python code, which could be useful for later use, e.g., creating other functions.
