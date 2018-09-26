@@ -79,7 +79,7 @@ s = s/max(x);
 % current the s is used to show
 
 %% save
-save(fileName, 'x', 'y', 'z', 'connections', 's', 's2', 's3');
+save(fileName, 'x', 'y', 'z', 'connections', 's', 's2', 's3', '-v6');
 disp([fileName, ' saved']);
 
 end % of fucntion
