@@ -2,7 +2,8 @@ This project provides a `Python` script `show` for visualizing 3D image volume, 
 
 It can be useful for people who analyze medical images in `Matlab` but would like to visualize large data set efficiently elsewhere.
 
-The basic work flow is to 
+The basic work flow is to
+
     - save data in `Matlab` in `mat` format
     - run `show` in a terminal or in a `ipython` interpreter to visualize the data
 
