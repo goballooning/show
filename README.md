@@ -16,7 +16,7 @@ The basic work flow is to
         > conda install mayavi
         ```
 - on linux, search mayavi in software center 
-- on mac, via macports
+- on mac, via [macports](https://www.macports.org/ports.php?by=name&substr=mayavi)
 
     ```bash
     sudo port install py35-mayavi
