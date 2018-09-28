@@ -705,7 +705,7 @@ def configFigureScene(e):
     # set magnification
     fh.scene.magnification = 1
     # fh.scene.jpeg_quality = 100
-
+    fh.scene.show_axes = True
     # set background and foreground
     #fh.scene.background = (1.0, 1.0, 1.0)
     #fh.scene.foreground = (0.0, 0.0, 0.0)
