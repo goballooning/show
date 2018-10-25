@@ -9,19 +9,10 @@ The basic work flow is to
 
 
 ## Install Mayavi 
-- on windows via [Anaconda Python distribution](http://continuum.io/downloads)
-    - download and install Anaconda
-    - on windows cmd prompt or Anaconda Command Prompt: 
+via [Anaconda Python distribution](http://continuum.io/downloads, https://repo.continuum.io/archive/index.html)
 
-        ```
-        > conda install mayavi
-        ```
-- on linux, search mayavi in software center 
-- on mac, via [macports](https://www.macports.org/ports.php?by=name&substr=mayavi)
-
-    ```bash
-    sudo port install vtk +python35
-    sudo port install py35-mayavi
+    ```
+    > conda install mayavi
     ```
 
 ## in matlab
