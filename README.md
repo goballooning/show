@@ -8,12 +8,29 @@ The basic work flow is to
     - run `show` in a terminal or in a `ipython` interpreter to visualize the data
 
 
-## Install Mayavi 
-via [Anaconda Python distribution](http://continuum.io/downloads, https://repo.continuum.io/archive/index.html)
+## Install Mayavi
+* [Anaconda Python distribution](http://continuum.io/downloads, https://repo.continuum.io/archive/index.html)
 
     ```
     > conda install mayavi
     ```
+
+* MacPort
+```
+sudo port install vtk +python36
+sudo port install py36-mayavi +pyqt5
+```
+
+### Install dependency pyvtk
+```
+git clone https://github.com/hakostra/pyvtk
+git checkout hakostra/tensor-out-encoding-fix
+cd pyvtk
+pip install .
+```
+(If `pyvtk` is installed by `pip install pyvtk`, an error will occur in saving tensor:
+_"TypeError: sequence item 1: expected str instance, bytes found"_
+
 
 ## in matlab
 
