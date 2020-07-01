@@ -8,9 +8,9 @@ if ~isempty(points)
     z = points(3,:);
     
     if nargin == 2
-        save(fileName, 'x', 'y', 'z');
+        save(fileName, 'x', 'y', 'z', '-v7');
     else
-        save('~/p', 'x', 'y', 'z');
+        save('~/p', 'x', 'y', 'z', '-v7');
     end
     
     disp('all the points: ');

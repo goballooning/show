@@ -13,23 +13,23 @@ switch nargin
     case 1
         error('just on para');
     case 2
-        save(fileName, 'intensity');
+        save(fileName, 'intensity', '-v7');
     case 3
         intensity = intensity(:,:,:, direction);
-        save(fileName, 'intensity');
+        save(fileName, 'intensity', '-v7');
     case 4
         if isempty(direction)
-            save(fileName, 'intensity', 'spacing');
+            save(fileName, 'intensity', 'spacing', '-v7');
         else
             intensity = intensity(:,:,:, direction);
-            save(fileName, 'intensity', 'spacing');
+            save(fileName, 'intensity', 'spacing', '-v7');
         end
     case 5
         if isempty(direction)
-            save(fileName, 'intensity', 'spacing', 'origin');
+            save(fileName, 'intensity', 'spacing', 'origin', '-v7');
         else
             intensity = intensity(:,:,:, direction);
-            save(fileName, 'intensity', 'spacing', 'origin');
+            save(fileName, 'intensity', 'spacing', 'origin', '-v7');
         end
             
     otherwise

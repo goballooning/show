@@ -122,4 +122,4 @@ end
 scalars = scalars - min(scalars);
 scalars = scalars/max(scalars);
 
-save(fileName, 'tensors', 'points', 'scalars');
+save(fileName, 'tensors', 'points', 'scalars', '-v7');

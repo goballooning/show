@@ -1,4 +1,4 @@
-#!/opt/local/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 ########################################################################
@@ -365,9 +365,10 @@ def fiberLine(fileName, e):
     # line show
     src = fiberShowCommon(fileName)
     # The stripper filter cleans up connected lines
-    lines = mlab.pipeline.stripper(src)
-    mlab.pipeline.surface(lines.outputs[0].output, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
-    #mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+    # lines = mlab.pipeline.stripper(src)
+    # mlab.pipeline.surface(lines.outputs[0].output, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+    # mlab.pipeline.surface(lines, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
+    mlab.pipeline.surface(src, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
 
 def fiberSingleRandomColor(fileName, e):
     # tube single random color

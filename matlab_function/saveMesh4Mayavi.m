@@ -6,6 +6,6 @@ z = fv.vertices(:, 3);
 triangles = fv.faces;
 
 
-save(file_name, 'x', 'y', 'z', 'triangles', 'colors');
+save(file_name, 'x', 'y', 'z', 'triangles', 'colors', '-v7');
 
 end %

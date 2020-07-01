@@ -22,6 +22,6 @@ x = seedPoints(1, :);
 y = seedPoints(2, :);
 z = seedPoints(3, :);
 
-save(fileName, 'x', 'y', 'z');
+save(fileName, 'x', 'y', 'z', '-v7');
 
 end %

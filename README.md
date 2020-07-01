@@ -1,6 +1,6 @@
 This project provides a `Python` script `show` for visualizing 3D image volume, tensor field, vector field, large number of curves, and meshes.
 
-It can be useful for people who analyze medical images in `Matlab` but would like to visualize large data set efficiently elsewhere.
+It can be useful for people who analyze medical images in `Matlab` but would like to visualize data efficiently elsewhere.
 
 The basic work flow is to
 
@@ -15,13 +15,7 @@ The basic work flow is to
     > conda install mayavi
     ```
 
-* MacPort
-```
-sudo port install vtk +python36
-sudo port install py36-mayavi +pyqt5
-```
-
-### Install dependency pyvtk
+### Install dependency pyvtk (for viewing tensor only)
 ```
 git clone https://github.com/hakostra/pyvtk
 git checkout hakostra/tensor-out-encoding-fix
@@ -29,10 +23,10 @@ cd pyvtk
 pip install .
 ```
 (If `pyvtk` is installed by `pip install pyvtk`, an error will occur in saving tensor:
-_"TypeError: sequence item 1: expected str instance, bytes found"_
+`_"TypeError: sequence item 1: expected str instance, bytes found"_`
 
 
-## in matlab
+## save data in matlab
 
 ```matlab
 load('test_data')

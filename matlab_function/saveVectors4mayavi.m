@@ -51,7 +51,7 @@ if nargin == 2
         end
     end
 
-    save(fileName, 'points', 'vectors');
+    save(fileName, 'points', 'vectors', '-v7');
 
 elseif nargin == 3
     
@@ -78,6 +78,6 @@ elseif nargin == 3
         end
     end
 
-    save(fileName, 'points', 'vectors');
+    save(fileName, 'points', 'vectors', '-v7');
 
 end
