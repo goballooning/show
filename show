@@ -364,6 +364,7 @@ def fiberTube(fileName, e):
 def fiberLine(fileName, e):
     # line show
     src = fiberShowCommon(fileName)
+    # comment out the stripper line per @brey (https://github.com/enthought/mayavi/issues/527)
     # The stripper filter cleans up connected lines
     # lines = mlab.pipeline.stripper(src)
     # mlab.pipeline.surface(lines.outputs[0].output, line_width=1.4, opacity=1, colormap='hsv', representation='wireframe', name='fiberLine '+fileName)
