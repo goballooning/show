@@ -14,6 +14,9 @@ The basic work flow is to
     ```
     > conda install mayavi
     ```
+As of Feb 24, 2022,
+- Mayavi is not surpported on M1 Mac 2021; 
+- I met the black screen problem in installing Mayavi via conda/mamba on Ubuntu Mate 20.04, which is solved by following [the pip approach for installation](https://github.com/prabhuramachandran/mayavi-workshop/blob/master/installation.md).
 
 ### Install dependency pyvtk (for viewing tensor only)
 ```
